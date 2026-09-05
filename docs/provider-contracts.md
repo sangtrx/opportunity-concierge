@@ -28,4 +28,4 @@ Current integration uses AgentMail's v0 REST API:
 - `POST /v0/inboxes` with stable `client_id` for idempotent inbox creation
 - `POST /v0/inboxes/:inbox_id/messages/send` for reminders
 
-Sending is always an explicit user click. The app never auto-emails from analysis.
+Sending is always an explicit user click. The app never auto-emails from analysis. Sends include a deterministic `Idempotency-Key` derived from opportunity + recipient + rendered content so retries of the same logical reminder do not duplicate delivery.

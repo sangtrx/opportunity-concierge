@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 function factsFromText(value:string){
   return value.split(/\n|;/).map(x=>x.trim()).filter(Boolean).slice(0,40);
@@ -29,7 +30,7 @@ export default function Page(){
     finally{setBusy(false)}
   }
 
-  async function emailReminder(id:any){
+  async function emailReminder(id:Id<"opportunities">){
     if(!email.trim()){setMessage("Enter your email before sending a reminder.");return;}
     setBusy(true); setMessage("Sending via AgentMail…");
     try{const sent=await sendReminder({opportunityId:id,to:email.trim()});setMessage(`Reminder sent via AgentMail · ${sent.messageId ?? "message accepted"}.`)}

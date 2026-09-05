@@ -1,5 +1,6 @@
 "use node";
 
+import { createHash } from "node:crypto";
 import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
@@ -70,8 +71,12 @@ export const sendReminder = action({
     const html = `<div style="font-family:system-ui,sans-serif;line-height:1.5"><h2>${escapeHtml(title)}</h2><pre style="white-space:pre-wrap;font:inherit">${escapeHtml(text)}</pre></div>`;
 
     const inbox = await getOrCreateInbox();
+    const idempotencyKey = createHash("sha256")
+      .update(`${args.opportunityId}:${to}:${text}`)
+      .digest("hex");
     const sent = await agentMail(`/inboxes/${encodeURIComponent(inbox.inbox_id)}/messages/send`, {
       method: "POST",
+      headers: { "Idempotency-Key": idempotencyKey },
       body: JSON.stringify({
         to,
         subject: `Opportunity reminder — ${title}`,
