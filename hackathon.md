@@ -10,9 +10,10 @@ App: **Opportunity Concierge**
 ## AI-assisted implementation
 - Initial schema, mutations and dashboard scaffold were authored with ChatGPT/Codex assistance on 2026-09-06.
 - Firecrawl v2 source capture, OpenAI strict structured eligibility analysis, verbatim evidence verification, and AgentMail explicit reminder sending were added on 2026-09-06.
+- Realtime evidence/action cards, explicit pursue/skip/needs-info decisions, and action completion controls were added on 2026-09-06 to make Convex state visibly central to the user journey.
 
 ## Runtime roles
-- **Convex:** canonical realtime opportunity/evidence/action/decision state.
+- **Convex:** canonical realtime opportunity/evidence/action/decision state and subscriptions.
 - **Firecrawl:** official-page capture into markdown snapshots.
 - **OpenAI:** structured extraction, eligibility reasoning and action generation from source + explicit user facts.
 - **AgentMail:** explicit user-triggered reminder delivery from an idempotent agent inbox.
