@@ -20,6 +20,8 @@ npm install
 npx convex dev
 ```
 
+The first successful Convex project setup generates `convex/_generated/`. Commit that generated directory: the application imports those generated API/server/data-model types, so a clean clone must have them available before `npm run typecheck` can pass without contacting a Convex deployment.
+
 Copy `.env.example` to `.env.local`, configure the generated `NEXT_PUBLIC_CONVEX_URL`, and set Firecrawl/OpenAI/AgentMail credentials in the Convex deployment environment. Then run:
 
 ```bash
