@@ -21,6 +21,8 @@ export function OpportunityCard({
   const [busy, setBusy] = useState(false);
   const [outboundId, setOutboundId] = useState<string | null>(null);
   const sendStatus = useQuery(api.mail.sendStatus, outboundId ? { outboundId } : "skip");
+  const threadId = sendStatus?.threadId ?? null;
+  const inboundMessages = useQuery(api.mail.threadMessages, threadId ? { threadId } : "skip");
 
   if (detail === undefined) return <article className="empty">Loading opportunity…</article>;
   if (detail === null) return null;
@@ -65,7 +67,7 @@ export function OpportunityCard({
     try {
       const sent = await sendReminder({ opportunityId: id, to: email.trim() });
       setOutboundId(sent.outboundId);
-      onMessage("Reminder queued through the AgentMail Convex component. Delivery status is live below.");
+      onMessage("Reminder queued through the AgentMail Convex component. Delivery and reply state are live below.");
     } catch (error) {
       onMessage(error instanceof Error ? error.message : "Email failed");
     } finally {
@@ -131,6 +133,15 @@ export function OpportunityCard({
       <button type="button" className="secondary" disabled={busy} onClick={remind}>Email reminder</button>
       {outboundId && (
         <div className="lastDecision">AgentMail delivery · {sendStatus?.status ?? "queued"}</div>
+      )}
+      {threadId && (
+        <div className="lastDecision">
+          AgentMail inbox · {inboundMessages === undefined
+            ? "syncing"
+            : inboundMessages.length > 0
+              ? `${inboundMessages.length} inbound repl${inboundMessages.length === 1 ? "y" : "ies"}`
+              : "waiting for reply"}
+        </div>
       )}
     </article>
   );
