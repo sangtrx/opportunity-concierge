@@ -1,6 +1,21 @@
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+function normalizeSourceUrl(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("Enter a valid URL");
+  }
+  if (!["http:", "https:"].includes(url.protocol)) {
+    throw new Error("Only HTTP(S) opportunity URLs are accepted");
+  }
+  url.hash = "";
+  url.searchParams.sort();
+  return url.toString();
+}
+
 export const list = query({ args: {}, handler: async (ctx) => {
   return ctx.db.query("opportunities").withIndex("by_updated").order("desc").take(100);
 }});
@@ -19,11 +34,30 @@ export const get = query({ args: { id: v.id("opportunities") }, handler: async (
 export const create = mutation({
   args: { sourceUrl: v.string(), kind: v.union(v.literal("hackathon"),v.literal("grant"),v.literal("scholarship"),v.literal("job"),v.literal("other")) },
   handler: async (ctx, args) => {
-    let u: URL;
-    try { u = new URL(args.sourceUrl); } catch { throw new Error("Enter a valid URL"); }
-    if (!["http:","https:"].includes(u.protocol)) throw new Error("Only HTTP(S) opportunity URLs are accepted");
+    const sourceUrl = normalizeSourceUrl(args.sourceUrl);
+    const existing = await ctx.db
+      .query("opportunities")
+      .withIndex("by_source_url", q => q.eq("sourceUrl", sourceUrl))
+      .first();
     const now = Date.now();
-    return ctx.db.insert("opportunities", { sourceUrl:u.toString(), kind:args.kind, eligibility:"unknown", missingFacts:[], priorityScore:0, status:"new", createdAt:now, updatedAt:now });
+
+    if (existing) {
+      if (existing.kind !== args.kind) {
+        await ctx.db.patch(existing._id, { kind: args.kind, updatedAt: now });
+      }
+      return existing._id;
+    }
+
+    return ctx.db.insert("opportunities", {
+      sourceUrl,
+      kind:args.kind,
+      eligibility:"unknown",
+      missingFacts:[],
+      priorityScore:0,
+      status:"new",
+      createdAt:now,
+      updatedAt:now
+    });
   },
 });
 
