@@ -1,12 +1,14 @@
 "use node";
 
-import OpenAI from "openai";
 import { createHash } from "node:crypto";
+import { FirecrawlClient } from "@firecrawl/firecrawl-convex";
+import OpenAI from "openai";
 import { action } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import { v } from "convex/values";
 
 const MAX_SOURCE_CHARS = 90_000;
+const firecrawl = new FirecrawlClient(components.firecrawl);
 
 const assessmentSchema = {
   type: "object",
@@ -84,34 +86,22 @@ function publicHttpUrl(raw: string): URL {
   return url;
 }
 
-async function scrapeOfficialPage(sourceUrl: string): Promise<{ markdown: string; title?: string }> {
+async function scrapeOfficialPage(
+  ctx: Parameters<typeof firecrawl.scrape>[0],
+  sourceUrl: string
+): Promise<{ markdown: string; title?: string }> {
   const url = publicHttpUrl(sourceUrl);
-  const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${env("FIRECRAWL_API_KEY")}`,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify({
-      url: url.toString(),
-      formats: ["markdown"],
-      onlyMainContent: true,
-      timeout: 30_000
-    }),
-    signal: AbortSignal.timeout(45_000)
+  const page = await firecrawl.scrape(ctx, url.toString(), {
+    formats: ["markdown"],
+    onlyMainContent: true,
+    timeout: 30_000,
   });
-
-  const payload = await response.json() as {
-    success?: boolean;
-    error?: string;
-    data?: { markdown?: string; metadata?: { title?: string } };
-  };
-  if (!response.ok || payload.success !== true) {
-    throw new Error(`Firecrawl failed (${response.status}): ${payload.error ?? "unknown error"}`);
-  }
-  const markdown = payload.data?.markdown?.trim();
+  const markdown = page.markdown?.trim();
   if (!markdown) throw new Error("Firecrawl returned no markdown content");
-  return { markdown: markdown.slice(0, MAX_SOURCE_CHARS), title: payload.data?.metadata?.title };
+  return {
+    markdown: markdown.slice(0, MAX_SOURCE_CHARS),
+    title: page.metadata?.title,
+  };
 }
 
 async function assessWithOpenAI(sourceUrl: string, markdown: string, candidateFacts: string[]): Promise<Assessment> {
@@ -168,7 +158,7 @@ export const analyze = action({
     if (!opportunity) throw new Error("Opportunity not found");
 
     const facts = args.candidateFacts.map((fact) => fact.trim()).filter(Boolean).slice(0, 40);
-    const scraped = await scrapeOfficialPage(opportunity.sourceUrl);
+    const scraped = await scrapeOfficialPage(ctx, opportunity.sourceUrl);
     const contentHash = createHash("sha256").update(scraped.markdown).digest("hex");
     const assessment = await assessWithOpenAI(opportunity.sourceUrl, scraped.markdown, facts);
     const evidence = verifiedEvidence(scraped.markdown, assessment.evidence);
