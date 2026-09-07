@@ -17,7 +17,10 @@ export default defineSchema({
     priorityScore: v.number(),
     status: v.union(v.literal("new"), v.literal("reviewing"), v.literal("pursue"), v.literal("skip"), v.literal("submitted")),
     createdAt: v.number(), updatedAt: v.number(),
-  }).index("by_updated", ["updatedAt"]).index("by_deadline", ["deadlineAt"]),
+  })
+    .index("by_updated", ["updatedAt"])
+    .index("by_deadline", ["deadlineAt"])
+    .index("by_source_url", ["sourceUrl"]),
   evidence: defineTable({
     opportunityId: v.id("opportunities"),
     sourceUrl: v.string(),
