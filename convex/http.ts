@@ -9,7 +9,12 @@ const http = httpRouter();
 http.route({
   path: "/agentmail/webhook",
   method: "POST",
-  handler: httpAction(async (ctx, request) => agentmail.handleWebhook(ctx, request)),
+  handler: httpAction(async (ctx, request) =>
+    agentmail.handleWebhook(
+      ctx as unknown as Parameters<AgentMail["handleWebhook"]>[0],
+      request,
+    ),
+  ),
 });
 
 export default http;
