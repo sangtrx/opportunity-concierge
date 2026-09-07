@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "convex": "^1.28.2",
+    "@agentmail/convex": "^0.1.0",
+    "@firecrawl/firecrawl-convex": "^0.1.1",
+    "convex": "^1.45.0",
+    "convex-helpers": "^0.1.122",
     "next": "^15.5.2",
     "openai": "^5.19.1",
     "react": "^19.1.1",
