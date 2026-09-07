@@ -62,6 +62,15 @@ export const sendStatus = query({
   },
 });
 
+export const threadMessages = query({
+  args: { threadId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.runQuery(components.agentmail.lib.listInboundMessages, {
+      threadId: args.threadId,
+    });
+  },
+});
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
