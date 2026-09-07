@@ -19,6 +19,8 @@ export function OpportunityCard({
   const setActionStatus = useMutation(api.actions.setStatus);
   const sendReminder = useAction(api.mail.sendReminder);
   const [busy, setBusy] = useState(false);
+  const [outboundId, setOutboundId] = useState<string | null>(null);
+  const sendStatus = useQuery(api.mail.sendStatus, outboundId ? { outboundId } : "skip");
 
   if (detail === undefined) return <article className="empty">Loading opportunity…</article>;
   if (detail === null) return null;
@@ -62,7 +64,8 @@ export function OpportunityCard({
     setBusy(true);
     try {
       const sent = await sendReminder({ opportunityId: id, to: email.trim() });
-      onMessage(`Reminder sent via AgentMail · ${sent.messageId ?? "message accepted"}.`);
+      setOutboundId(sent.outboundId);
+      onMessage("Reminder queued through the AgentMail Convex component. Delivery status is live below.");
     } catch (error) {
       onMessage(error instanceof Error ? error.message : "Email failed");
     } finally {
@@ -126,6 +129,9 @@ export function OpportunityCard({
       </section>
       {latestDecision && <div className="lastDecision">Latest decision · {latestDecision.decision.replace("_", " ")}</div>}
       <button type="button" className="secondary" disabled={busy} onClick={remind}>Email reminder</button>
+      {outboundId && (
+        <div className="lastDecision">AgentMail delivery · {sendStatus?.status ?? "queued"}</div>
+      )}
     </article>
   );
 }
