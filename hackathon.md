@@ -11,6 +11,7 @@ App: **Opportunity Concierge**
 - Initial schema, mutations and dashboard scaffold were authored with ChatGPT/Codex assistance on 2026-09-06.
 - Firecrawl v2 source capture, OpenAI strict structured eligibility analysis, verbatim evidence verification, and AgentMail explicit reminder sending were added on 2026-09-06.
 - Realtime evidence/action cards, explicit pursue/skip/needs-info decisions, and action completion controls were added on 2026-09-06 to make Convex state visibly central to the user journey.
+- Source-side URL canonicalization/de-duplication and explicit hackathon/grant/scholarship/job/other capture were added on 2026-09-07. This change is committed but remains runtime-unverified until Convex project provisioning generates the real `convex/_generated/` bindings.
 
 ## Runtime roles
 - **Convex:** canonical realtime opportunity/evidence/action/decision state and subscriptions.
@@ -22,3 +23,4 @@ App: **Opportunity Concierge**
 - New app work begins after 2026-08-25.
 - Public deployment, final README/demo/social evidence remain pending.
 - Provider credentials remain environment-only and are never committed.
+- Clean-clone/typecheck acceptance remains blocked on account-side Convex provisioning and committed generated bindings; source changes must not be represented as live-validated before that gate is cleared.
