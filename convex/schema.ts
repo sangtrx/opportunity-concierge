@@ -3,6 +3,10 @@ import { v } from "convex/values";
 
 const eligibility = v.union(v.literal("eligible"), v.literal("ineligible"), v.literal("needs_info"), v.literal("unknown"));
 const actionStatus = v.union(v.literal("todo"), v.literal("doing"), v.literal("done"), v.literal("skipped"));
+const eligibilityFactStatus = v.union(v.literal("confirmed"), v.literal("missing"), v.literal("conflicting"));
+const factSource = v.union(v.literal("ai"), v.literal("user"), v.literal("system"));
+const reminderStatus = v.union(v.literal("scheduled"), v.literal("sent"), v.literal("dismissed"));
+const reminderChannel = v.union(v.literal("in_app"), v.literal("email"));
 
 export default defineSchema({
   opportunities: defineTable({
@@ -21,6 +25,18 @@ export default defineSchema({
     .index("by_updated", ["updatedAt"])
     .index("by_deadline", ["deadlineAt"])
     .index("by_source_url", ["sourceUrl"]),
+  eligibilityFacts: defineTable({
+    opportunityId: v.id("opportunities"),
+    key: v.string(),
+    value: v.optional(v.string()),
+    status: eligibilityFactStatus,
+    source: factSource,
+    evidenceId: v.optional(v.id("evidence")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_opportunity", ["opportunityId"])
+    .index("by_opportunity_key", ["opportunityId", "key"]),
   evidence: defineTable({
     opportunityId: v.id("opportunities"),
     sourceUrl: v.string(),
@@ -45,6 +61,18 @@ export default defineSchema({
     source: v.union(v.literal("ai"), v.literal("user"), v.literal("system")),
     createdAt: v.number(), updatedAt: v.number(),
   }).index("by_opportunity", ["opportunityId"]).index("by_due", ["dueAt"]),
+  reminders: defineTable({
+    opportunityId: v.id("opportunities"),
+    actionId: v.optional(v.id("actions")),
+    title: v.string(),
+    remindAt: v.number(),
+    status: reminderStatus,
+    channel: reminderChannel,
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_opportunity", ["opportunityId"])
+    .index("by_status_time", ["status", "remindAt"]),
   decisions: defineTable({
     opportunityId: v.id("opportunities"),
     decision: v.union(v.literal("pursue"), v.literal("skip"), v.literal("needs_info")),
