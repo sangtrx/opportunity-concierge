@@ -1,47 +1,16 @@
-"use node";
-
-import { createHash } from "node:crypto";
-import { action } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { AgentMail, type OutboundId } from "@agentmail/convex";
 import { v } from "convex/values";
+import { components, internal } from "./_generated/api";
+import { action, query } from "./_generated/server";
 
-function env(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) throw new Error(`${name} is not configured`);
-  return value;
-}
-
-async function agentMail(path: string, init: RequestInit): Promise<any> {
-  const response = await fetch(`https://api.agentmail.to/v0${path}`, {
-    ...init,
-    headers: {
-      authorization: `Bearer ${env("AGENTMAIL_API_KEY")}`,
-      "content-type": "application/json",
-      ...(init.headers ?? {})
-    },
-    signal: AbortSignal.timeout(30_000)
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`AgentMail failed (${response.status}): ${payload?.message ?? payload?.error ?? "unknown error"}`);
-  return payload;
-}
-
-async function getOrCreateInbox(): Promise<{ inbox_id: string; email?: string }> {
-  return agentMail("/inboxes", {
-    method: "POST",
-    body: JSON.stringify({
-      client_id: process.env.AGENTMAIL_INBOX_CLIENT_ID?.trim() || "opportunity-concierge-v1",
-      display_name: "Opportunity Concierge"
-    })
-  });
-}
+const agentmail = new AgentMail(components.agentmail);
 
 export const sendReminder = action({
   args: {
     opportunityId: v.id("opportunities"),
-    to: v.string()
+    to: v.string(),
   },
-  handler: async (ctx, args): Promise<{ messageId: string | null; inboxId: string }> => {
+  handler: async (ctx, args): Promise<{ outboundId: string; inboxId: string }> => {
     const to = args.to.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) throw new Error("Enter a valid email address");
 
@@ -70,23 +39,27 @@ export const sendReminder = action({
     const text = lines.join("\n");
     const html = `<div style="font-family:system-ui,sans-serif;line-height:1.5"><h2>${escapeHtml(title)}</h2><pre style="white-space:pre-wrap;font:inherit">${escapeHtml(text)}</pre></div>`;
 
-    const inbox = await getOrCreateInbox();
-    const idempotencyKey = createHash("sha256")
-      .update(`${args.opportunityId}:${to}:${text}`)
-      .digest("hex");
-    const sent = await agentMail(`/inboxes/${encodeURIComponent(inbox.inbox_id)}/messages/send`, {
-      method: "POST",
-      headers: { "Idempotency-Key": idempotencyKey },
-      body: JSON.stringify({
-        to,
-        subject: `Opportunity reminder — ${title}`,
-        text,
-        html,
-        labels: ["opportunity-concierge"]
-      })
+    const inbox = await agentmail.createInbox(ctx, {
+      clientId: "opportunity-concierge-v1",
+      displayName: "Opportunity Concierge",
     });
-    return { messageId: sent.message_id ?? null, inboxId: inbox.inbox_id };
-  }
+    const outboundId = await ctx.runMutation(internal.mailQueue.enqueueReminder, {
+      inboxId: inbox.inbox_id,
+      to,
+      subject: `Opportunity reminder — ${title}`,
+      text,
+      html,
+    });
+
+    return { outboundId, inboxId: inbox.inbox_id };
+  },
+});
+
+export const sendStatus = query({
+  args: { outboundId: v.string() },
+  handler: async (ctx, args) => {
+    return await agentmail.status(ctx, args.outboundId as OutboundId);
+  },
 });
 
 function escapeHtml(value: string): string {
