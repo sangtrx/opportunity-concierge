@@ -5,6 +5,8 @@ import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { OpportunityCard } from "./OpportunityCard";
 
+type OpportunityKind = "hackathon" | "grant" | "scholarship" | "job" | "other";
+
 function factsFromText(value: string) {
   return value.split(/\n|;/).map((x) => x.trim()).filter(Boolean).slice(0, 40);
 }
@@ -14,6 +16,7 @@ export default function Page() {
   const create = useMutation(api.opportunities.create);
   const analyze = useAction(api.ingest.analyze);
   const [url, setUrl] = useState("");
+  const [kind, setKind] = useState<OpportunityKind>("hackathon");
   const [facts, setFacts] = useState("");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,7 +27,7 @@ export default function Page() {
     setBusy(true);
     setMessage("Capturing the official source with Firecrawl…");
     try {
-      const id = await create({ sourceUrl: url, kind: "hackathon" });
+      const id = await create({ sourceUrl: url, kind });
       const result = await analyze({ opportunityId: id, candidateFacts: factsFromText(facts) });
       setUrl("");
       setMessage(`Analysis complete · ${result.eligibility} · ${result.evidenceCount} verified evidence quote(s).`);
@@ -44,7 +47,14 @@ export default function Page() {
       </header>
       <form onSubmit={submit} className="captureStack">
         <div className="capture">
-          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste an official hackathon, grant, scholarship or job URL" />
+          <select value={kind} onChange={(e) => setKind(e.target.value as OpportunityKind)} aria-label="Opportunity type">
+            <option value="hackathon">Hackathon</option>
+            <option value="grant">Grant</option>
+            <option value="scholarship">Scholarship</option>
+            <option value="job">Job</option>
+            <option value="other">Other</option>
+          </select>
+          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste an official opportunity URL" />
           <button disabled={busy || !url.trim()}>{busy ? "Working…" : "Analyze"}</button>
         </div>
         <textarea value={facts} onChange={(e) => setFacts(e.target.value)} placeholder={'Your facts, one per line. Example:\nResident of Vietnam\nAI engineer\nSolo participant'} />
