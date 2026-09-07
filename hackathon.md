@@ -13,6 +13,7 @@ App: **Opportunity Concierge**
 - Realtime evidence/action cards, explicit pursue/skip/needs-info decisions, and action completion controls were added on 2026-09-06 to make Convex state visibly central to the user journey.
 - Source-side URL canonicalization/de-duplication and explicit hackathon/grant/scholarship/job/other capture were added on 2026-09-07.
 - On 2026-09-07 the sponsor integrations were deepened to use the official Firecrawl and AgentMail Convex Components. Firecrawl scraping now runs through `FirecrawlClient`; AgentMail reminders now use the component's durable outbound queue, expose reactive delivery state, mount a verified inbound webhook, and expose reactive thread replies.
+- On 2026-09-07 the judge demo and submission evidence were updated to exercise the component-backed outbound status + inbound reply loop and to keep a fail-closed distinction between source-complete and live-accepted behavior.
 
 ## Runtime roles
 - **Convex:** canonical realtime opportunity/evidence/action/decision/source state plus component-backed email state and subscriptions.
