@@ -39,19 +39,17 @@ export const sendReminder = action({
     const text = lines.join("\n");
     const html = `<div style="font-family:system-ui,sans-serif;line-height:1.5"><h2>${escapeHtml(title)}</h2><pre style="white-space:pre-wrap;font:inherit">${escapeHtml(text)}</pre></div>`;
 
-    const inbox = await agentmail.createInbox(ctx, {
-      clientId: "opportunity-concierge-v1",
-      displayName: "Opportunity Concierge",
-    });
+    const inboxId = process.env.AGENTMAIL_INBOX_ID?.trim();
+    if (!inboxId) throw new Error("AGENTMAIL_INBOX_ID is not configured");
     const outboundId = await ctx.runMutation(internal.mailQueue.enqueueReminder, {
-      inboxId: inbox.inbox_id,
+      inboxId,
       to,
       subject: `Opportunity reminder — ${title}`,
       text,
       html,
     });
 
-    return { outboundId, inboxId: inbox.inbox_id };
+    return { outboundId, inboxId };
   },
 });
 
@@ -68,6 +66,15 @@ export const threadMessages = query({
     return await ctx.runQuery(components.agentmail.lib.listInboundMessages, {
       threadId: args.threadId,
     });
+  },
+});
+
+export const inboundMessages = query({
+  args: {},
+  handler: async (ctx) => {
+    const inboxId = process.env.AGENTMAIL_INBOX_ID?.trim();
+    if (!inboxId) throw new Error("AGENTMAIL_INBOX_ID is not configured");
+    return await ctx.runQuery(components.agentmail.lib.listInboundMessages, { inboxId });
   },
 });
 
