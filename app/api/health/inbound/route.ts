@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 const MAX_OPPORTUNITIES = 25;
+const DEFAULT_CONVEX_URL = "https://valiant-crab-246.convex.cloud";
 
 type ConvexSuccess = {
   status: "success";
@@ -9,7 +10,7 @@ type ConvexSuccess = {
 
 class HealthProbeError extends Error {
   constructor(
-    readonly stage: "convex_url_missing" | "convex_http_error" | "convex_function_error",
+    readonly stage: "convex_http_error" | "convex_function_error",
     readonly convexHttpStatus?: number,
   ) {
     super(stage);
@@ -17,8 +18,7 @@ class HealthProbeError extends Error {
 }
 
 async function convexQuery(path: string, args: Record<string, unknown>) {
-  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.trim();
-  if (!convexUrl) throw new HealthProbeError("convex_url_missing");
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.trim() || DEFAULT_CONVEX_URL;
 
   const response = await fetch(`${convexUrl}/api/query`, {
     method: "POST",
