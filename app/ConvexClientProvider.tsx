@@ -1,9 +1,11 @@
 "use client";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import type { ReactNode } from "react";
-const url=process.env.NEXT_PUBLIC_CONVEX_URL;
-const client=url ? new ConvexReactClient(url) : null;
+
+const DEFAULT_CONVEX_URL = "https://valiant-crab-246.convex.cloud";
+const url = process.env.NEXT_PUBLIC_CONVEX_URL?.trim() || DEFAULT_CONVEX_URL;
+const client = new ConvexReactClient(url);
+
 export function ConvexClientProvider({children}:{children:ReactNode}){
-  if(!client) return <div style={{padding:24,fontFamily:"system-ui"}}>Set NEXT_PUBLIC_CONVEX_URL after running <code>npx convex dev</code>.</div>;
   return <ConvexProvider client={client}>{children}</ConvexProvider>;
 }
