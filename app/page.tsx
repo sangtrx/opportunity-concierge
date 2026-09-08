@@ -21,6 +21,15 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("Paste an official opportunity URL. Leave facts blank if you want the system to tell you what it still needs to know.");
+  const prioritizedItems = items
+    ? [...items].sort((a, b) => {
+        if (b.priorityScore !== a.priorityScore) return b.priorityScore - a.priorityScore;
+        const aDeadline = a.deadlineAt ?? Number.MAX_SAFE_INTEGER;
+        const bDeadline = b.deadlineAt ?? Number.MAX_SAFE_INTEGER;
+        if (aDeadline !== bDeadline) return aDeadline - bDeadline;
+        return b.updatedAt - a.updatedAt;
+      })
+    : items;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -65,12 +74,12 @@ export default function Page() {
       </form>
       <div className="statusline">{message}</div>
       <section className="grid">
-        {items === undefined ? (
+        {prioritizedItems === undefined ? (
           <div className="empty">Loading live state…</div>
-        ) : items.length === 0 ? (
+        ) : prioritizedItems.length === 0 ? (
           <div className="empty">No opportunities yet.</div>
         ) : (
-          items.map((item) => <OpportunityCard key={item._id} id={item._id} email={email} onMessage={setMessage} />)
+          prioritizedItems.map((item) => <OpportunityCard key={item._id} id={item._id} email={email} onMessage={setMessage} />)
         )}
       </section>
     </main>
