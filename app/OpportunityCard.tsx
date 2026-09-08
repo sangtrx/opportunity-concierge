@@ -17,22 +17,27 @@ export function OpportunityCard({
   const detail = useQuery(api.opportunities.get, { id });
   const setDecision = useMutation(api.opportunities.setDecision);
   const setActionStatus = useMutation(api.actions.setStatus);
-  const sendReminder = useAction(api.mail.sendReminder);
   const linkOutboundThread = useMutation(api.mail.linkOutboundThread);
+  const sendReminder = useAction(api.mail.sendReminder);
   const [busy, setBusy] = useState(false);
   const [outboundId, setOutboundId] = useState<string | null>(null);
   const sendStatus = useQuery(api.mail.sendStatus, outboundId ? { outboundId } : "skip");
   const threadId = sendStatus?.threadId ?? null;
-  const inboundMessages = useQuery(api.mail.threadMessages, threadId ? { threadId } : "skip");
+  const replyState = useQuery(
+    api.mail.replyState,
+    outboundId ? { opportunityId: id, outboundId } : "skip",
+  );
   const followUpDraft = useQuery(
     api.mail.followUpDraft,
-    threadId && inboundMessages && inboundMessages.length > 0 ? { opportunityId: id, threadId } : "skip",
+    outboundId && replyState?.status === "reply_received"
+      ? { opportunityId: id, outboundId }
+      : "skip",
   );
 
   useEffect(() => {
     if (!outboundId || !threadId) return;
     void linkOutboundThread({ opportunityId: id, outboundId, threadId }).catch(() => {
-      // The webhook can link the same thread first; the reactive UI does not need to surface that benign race.
+      // The webhook callback can establish the same link first; this sync is best-effort.
     });
   }, [id, linkOutboundThread, outboundId, threadId]);
 
@@ -146,12 +151,12 @@ export function OpportunityCard({
       {outboundId && (
         <div className="lastDecision">AgentMail delivery · {sendStatus?.status ?? "queued"}</div>
       )}
-      {threadId && (
+      {outboundId && (
         <div className="lastDecision">
-          AgentMail inbox · {inboundMessages === undefined
+          AgentMail inbox · {replyState === undefined
             ? "syncing"
-            : inboundMessages.length > 0
-              ? `${inboundMessages.length} inbound repl${inboundMessages.length === 1 ? "y" : "ies"}`
+            : replyState?.status === "reply_received"
+              ? "reply received"
               : "waiting for reply"}
         </div>
       )}
