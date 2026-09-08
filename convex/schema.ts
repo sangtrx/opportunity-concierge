@@ -7,6 +7,7 @@ const eligibilityFactStatus = v.union(v.literal("confirmed"), v.literal("missing
 const factSource = v.union(v.literal("ai"), v.literal("user"), v.literal("system"));
 const reminderStatus = v.union(v.literal("scheduled"), v.literal("sent"), v.literal("dismissed"));
 const reminderChannel = v.union(v.literal("in_app"), v.literal("email"));
+const mailThreadStatus = v.union(v.literal("queued"), v.literal("sent"), v.literal("reply_received"));
 
 export default defineSchema({
   opportunities: defineTable({
@@ -73,6 +74,24 @@ export default defineSchema({
   })
     .index("by_opportunity", ["opportunityId"])
     .index("by_status_time", ["status", "remindAt"]),
+  mailThreads: defineTable({
+    opportunityId: v.id("opportunities"),
+    inboxId: v.string(),
+    recipient: v.string(),
+    dedupeKey: v.string(),
+    payloadFingerprint: v.string(),
+    outboundId: v.string(),
+    threadId: v.optional(v.string()),
+    status: mailThreadStatus,
+    lastEventId: v.optional(v.string()),
+    lastInboundAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_opportunity", ["opportunityId"])
+    .index("by_dedupe_key", ["dedupeKey"])
+    .index("by_outbound", ["outboundId"])
+    .index("by_thread", ["threadId"]),
   decisions: defineTable({
     opportunityId: v.id("opportunities"),
     decision: v.union(v.literal("pursue"), v.literal("skip"), v.literal("needs_info")),
