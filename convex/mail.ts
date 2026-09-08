@@ -6,8 +6,8 @@ import { action, internalMutation, mutation, query } from "./_generated/server";
 const agentmail = new AgentMail(components.agentmail);
 const WAITING_ACTION = "Await reply to AgentMail reminder";
 const FOLLOW_UP_ACTION = "Review AgentMail reply and draft follow-up";
-const OPPORTUNITY_LABEL = "opportunity-id-";
-const REMINDER_LABEL = "reminder-key-";
+const OPPORTUNITY_LABEL_PREFIX = "opportunity-id-";
+const REMINDER_KEY_LABEL_PREFIX = "reminder-key-";
 
 export const sendReminder = action({
   args: {
@@ -42,11 +42,18 @@ export const sendReminder = action({
     ];
     const text = lines.join("\n");
     const html = `<div style="font-family:system-ui,sans-serif;line-height:1.5"><h2>${escapeHtml(title)}</h2><pre style="white-space:pre-wrap;font:inherit">${escapeHtml(text)}</pre></div>`;
+    const subject = `Opportunity reminder — ${title}`;
 
     const inboxId = process.env.AGENTMAIL_INBOX_ID?.trim();
     if (!inboxId) throw new Error("AGENTMAIL_INBOX_ID is not configured");
-    const subject = `Opportunity reminder — ${title}`;
-    const payloadFingerprint = [String(args.opportunityId), to.toLowerCase(), subject, text, html].join("\n---\n");
+
+    const payloadFingerprint = [
+      String(args.opportunityId),
+      to.toLowerCase(),
+      subject,
+      text,
+      html,
+    ].join("\n---\n");
     const dedupeKey = stableDigest(payloadFingerprint);
     const outboundId = await ctx.runMutation(internal.mailQueue.enqueueReminder, {
       opportunityId: args.opportunityId,
@@ -70,21 +77,23 @@ export const sendStatus = query({
   },
 });
 
-export const threadMessages = query({
-  args: { threadId: v.string() },
-  handler: async (ctx, args) => {
-    return await ctx.runQuery(components.agentmail.lib.listInboundMessages, {
-      threadId: args.threadId,
-    });
+export const replyState = query({
+  args: {
+    opportunityId: v.id("opportunities"),
+    outboundId: v.string(),
   },
-});
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("mailThreads")
+      .withIndex("by_outbound", q => q.eq("outboundId", args.outboundId))
+      .first();
+    if (!row || row.opportunityId !== args.opportunityId) return null;
 
-export const inboundMessages = query({
-  args: {},
-  handler: async (ctx) => {
-    const inboxId = process.env.AGENTMAIL_INBOX_ID?.trim();
-    if (!inboxId) throw new Error("AGENTMAIL_INBOX_ID is not configured");
-    return await ctx.runQuery(components.agentmail.lib.listInboundMessages, { inboxId });
+    return {
+      status: row.status,
+      threadId: row.threadId ?? null,
+      lastInboundAt: row.lastInboundAt ?? null,
+    };
   },
 });
 
@@ -97,17 +106,19 @@ export const linkOutboundThread = mutation({
   handler: async (ctx, args) => {
     const row = await ctx.db
       .query("mailThreads")
-      .withIndex("by_outbound", (q) => q.eq("outboundId", args.outboundId))
+      .withIndex("by_outbound", q => q.eq("outboundId", args.outboundId))
       .first();
     if (!row || row.opportunityId !== args.opportunityId) {
-      throw new Error("Reminder send is not linked to this opportunity");
+      throw new Error("Outbound reminder is not linked to this opportunity");
     }
 
-    const linked = await ctx.db
+    const alreadyLinked = await ctx.db
       .query("mailThreads")
-      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
+      .withIndex("by_thread", q => q.eq("threadId", args.threadId))
       .first();
-    if (linked && linked._id !== row._id) throw new Error("AgentMail thread is already linked");
+    if (alreadyLinked && alreadyLinked._id !== row._id) {
+      throw new Error("AgentMail thread is already linked to another reminder");
+    }
 
     await ctx.db.patch(row._id, {
       threadId: args.threadId,
@@ -120,43 +131,61 @@ export const linkOutboundThread = mutation({
 export const followUpDraft = query({
   args: {
     opportunityId: v.id("opportunities"),
-    threadId: v.string(),
+    outboundId: v.string(),
   },
-  handler: async (ctx, args) => {
-    const inbound = await ctx.runQuery(components.agentmail.lib.listInboundMessages, { threadId: args.threadId });
-    if (inbound.length === 0) return null;
+  handler: async (ctx, args): Promise<{ subject: string; text: string } | null> => {
+    const linked = await ctx.db
+      .query("mailThreads")
+      .withIndex("by_outbound", q => q.eq("outboundId", args.outboundId))
+      .first();
+    if (
+      !linked ||
+      linked.opportunityId !== args.opportunityId ||
+      linked.status !== "reply_received"
+    ) {
+      return null;
+    }
 
     const opportunity = await ctx.db.get(args.opportunityId);
     if (!opportunity) return null;
-    const linked = await ctx.db
-      .query("mailThreads")
-      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
-      .first();
-    if (linked && linked.opportunityId !== args.opportunityId) return null;
 
     const actions = await ctx.db
       .query("actions")
-      .withIndex("by_opportunity", (q) => q.eq("opportunityId", args.opportunityId))
+      .withIndex("by_opportunity", q => q.eq("opportunityId", args.opportunityId))
       .take(100);
-    const remaining = actions
-      .filter((item) => item.status !== "done" && item.status !== "skipped" && item.title !== WAITING_ACTION && item.title !== FOLLOW_UP_ACTION)
+    const pending = actions
+      .filter(
+        item =>
+          item.status !== "done" &&
+          item.status !== "skipped" &&
+          item.title !== WAITING_ACTION &&
+          item.title !== FOLLOW_UP_ACTION,
+      )
       .slice(0, 5);
     const title = opportunity.title || new URL(opportunity.sourceUrl).hostname;
-    const deadline = opportunity.deadlineAt ? new Date(opportunity.deadlineAt).toISOString().slice(0, 10) : "not confirmed";
-    const text = [
+    const deadline = opportunity.deadlineAt
+      ? new Date(opportunity.deadlineAt).toISOString().slice(0, 10)
+      : "not confirmed";
+
+    const lines = [
       "Thanks for the reply.",
       "",
-      `I’m following up on ${title}.`,
-      `Deadline: ${deadline}`,
+      `I'm following up on ${title}.`,
+      `Current eligibility: ${opportunity.eligibility.replace("_", " ")}.`,
+      `Deadline: ${deadline}.`,
+      ...(pending.length
+        ? ["", "Remaining items:", ...pending.map(item => `- ${item.title}`)]
+        : ["", "No remaining action items are currently recorded."]),
+      "",
       `Source: ${opportunity.sourceUrl}`,
       "",
-      ...(remaining.length
-        ? ["Open items I’m tracking:", ...remaining.map((item) => `- ${item.title}`)]
-        : ["There are no other open items recorded right now."]),
-      "",
-      "Please let me know if there is anything else I should confirm before the next step.",
-    ].join("\n");
-    return { subject: `Re: Opportunity reminder — ${title}`, text };
+      "Please let me know if any of the remaining items need clarification.",
+    ];
+
+    return {
+      subject: `Re: Opportunity reminder — ${title}`,
+      text: lines.join("\n"),
+    };
   },
 });
 
@@ -168,26 +197,36 @@ export const onMessageReceived = internalMutation({
   },
   handler: async (ctx, args) => {
     const labels = getLabels(args.thread);
-    const rawOpportunityId = labels.find((label) => label.startsWith(OPPORTUNITY_LABEL))?.slice(OPPORTUNITY_LABEL.length);
-    const dedupeKey = labels.find((label) => label.startsWith(REMINDER_LABEL))?.slice(REMINDER_LABEL.length);
+    const opportunityLabel = labels.find(label => label.startsWith(OPPORTUNITY_LABEL_PREFIX));
+    const reminderKeyLabel = labels.find(label => label.startsWith(REMINDER_KEY_LABEL_PREFIX));
+    if (!opportunityLabel || !reminderKeyLabel) return null;
+
+    const rawOpportunityId = opportunityLabel.slice(OPPORTUNITY_LABEL_PREFIX.length);
+    const dedupeKey = reminderKeyLabel.slice(REMINDER_KEY_LABEL_PREFIX.length);
     if (!rawOpportunityId || !dedupeKey) return null;
 
     const row = await ctx.db
       .query("mailThreads")
-      .withIndex("by_dedupe_key", (q) => q.eq("dedupeKey", dedupeKey))
+      .withIndex("by_dedupe_key", q => q.eq("dedupeKey", dedupeKey))
       .first();
     if (!row || String(row.opportunityId) !== rawOpportunityId) return null;
-    if (row.lastEventId === args.eventId) return row._id;
+    const opportunityId = row.opportunityId;
+    if (row.lastEventId === args.eventId) return null;
 
-    const threadId = getStructuralString(args.thread, ["thread_id", "threadId", "id"]);
-    const inboxId = getStructuralString(args.thread, ["inbox_id", "inboxId"]);
-    if (inboxId && inboxId !== row.inboxId) return null;
+    const threadId = getStructuralString(args.message, "thread_id") ?? getStructuralString(args.thread, "thread_id");
+    const inboxId = getStructuralString(args.message, "inbox_id") ?? getStructuralString(args.thread, "inbox_id");
+    if (inboxId && inboxId !== row.inboxId) {
+      throw new Error("Inbound AgentMail inbox does not match the reminder inbox");
+    }
+
     if (threadId) {
       const linked = await ctx.db
         .query("mailThreads")
-        .withIndex("by_thread", (q) => q.eq("threadId", threadId))
+        .withIndex("by_thread", q => q.eq("threadId", threadId))
         .first();
-      if (linked && linked._id !== row._id) return null;
+      if (linked && linked._id !== row._id) {
+        throw new Error("Inbound AgentMail thread is already linked to another reminder");
+      }
     }
 
     const now = Date.now();
@@ -201,20 +240,21 @@ export const onMessageReceived = internalMutation({
 
     const actions = await ctx.db
       .query("actions")
-      .withIndex("by_opportunity", (q) => q.eq("opportunityId", row.opportunityId))
+      .withIndex("by_opportunity", q => q.eq("opportunityId", opportunityId))
       .take(100);
-    const waiting = actions.find((item) => item.source === "system" && item.title === WAITING_ACTION);
+    const waiting = actions.find(item => item.source === "system" && item.title === WAITING_ACTION);
     if (waiting && waiting.status !== "done") {
       await ctx.db.patch(waiting._id, { status: "done", updatedAt: now });
     }
-    const followUp = actions.find((item) => item.source === "system" && item.title === FOLLOW_UP_ACTION);
+
+    const followUp = actions.find(item => item.source === "system" && item.title === FOLLOW_UP_ACTION);
     if (followUp) {
       if (followUp.status === "done" || followUp.status === "skipped") {
         await ctx.db.patch(followUp._id, { status: "todo", updatedAt: now });
       }
     } else {
       await ctx.db.insert("actions", {
-        opportunityId: row.opportunityId,
+        opportunityId,
         title: FOLLOW_UP_ACTION,
         status: "todo",
         source: "system",
@@ -223,24 +263,20 @@ export const onMessageReceived = internalMutation({
       });
     }
 
-    return row._id;
+    return null;
   },
 });
 
-function getLabels(value: unknown): string[] {
-  if (!value || typeof value !== "object") return [];
-  const labels = (value as Record<string, unknown>).labels;
-  return Array.isArray(labels) ? labels.filter((item): item is string => typeof item === "string") : [];
+function getLabels(thread: unknown): string[] {
+  if (!thread || typeof thread !== "object") return [];
+  const labels = (thread as Record<string, unknown>).labels;
+  return Array.isArray(labels) ? labels.filter((value): value is string => typeof value === "string") : [];
 }
 
-function getStructuralString(value: unknown, keys: string[]): string | undefined {
-  if (!value || typeof value !== "object") return undefined;
-  const record = value as Record<string, unknown>;
-  for (const key of keys) {
-    const candidate = record[key];
-    if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
-  }
-  return undefined;
+function getStructuralString(value: unknown, key: string): string | null {
+  if (!value || typeof value !== "object") return null;
+  const candidate = (value as Record<string, unknown>)[key];
+  return typeof candidate === "string" && candidate.trim() ? candidate.trim() : null;
 }
 
 function stableDigest(value: string): string {
