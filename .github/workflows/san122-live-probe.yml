@@ -10,17 +10,62 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Read production inbound health
+      - name: Read public Convex reactive state
         shell: bash
         run: |
           set -euo pipefail
-          body=""
-          for attempt in {1..12}; do
-            if body="$(curl -fsS --max-time 15 https://opportunity-concierge.vercel.app/api/health/inbound)"; then
-              break
+          api="https://valiant-crab-246.convex.cloud/api/query"
+          request() {
+            curl -fsS --max-time 15 \
+              -H 'Accept: application/json' \
+              -H 'Content-Type: application/json' \
+              --data "$1" \
+              "$api"
+          }
+
+          opportunities="$(request '{"path":"opportunities:list","args":{},"format":"json"}')" || {
+            jq -nc '{ok:false,failureReason:"opportunities_query_unreadable"}'
+            exit 1
+          }
+          test "$(jq -r '.status // ""' <<<"$opportunities")" = "success" || {
+            jq -nc '{ok:false,failureReason:"opportunities_query_failed"}'
+            exit 1
+          }
+
+          total="$(jq '.value | length' <<<"$opportunities")"
+          scanned=0
+          threads=0
+          replies=0
+          inbound_timestamps=0
+
+          while IFS= read -r opportunity_id; do
+            test -n "$opportunity_id" || continue
+            scanned=$((scanned + 1))
+            payload="$(jq -nc --arg id "$opportunity_id" '{path:"mail:latestThread",args:{opportunityId:$id},format:"json"}')"
+            row="$(request "$payload")" || {
+              jq -nc '{ok:false,failureReason:"mail_query_unreadable"}'
+              exit 1
+            }
+            test "$(jq -r '.status // ""' <<<"$row")" = "success" || {
+              jq -nc '{ok:false,failureReason:"mail_query_failed"}'
+              exit 1
+            }
+            if test "$(jq -r '.value == null' <<<"$row")" = "true"; then
+              continue
             fi
-            sleep 5
-          done
-          test -n "$body"
-          printf '%s\n' "$body" | jq .
-          printf '%s\n' "$body" | jq -e '.ok == true'
+            threads=$((threads + 1))
+            if test "$(jq -r '.value.status == "reply_received"' <<<"$row")" = "true"; then
+              replies=$((replies + 1))
+            fi
+            if test "$(jq -r '(.value.lastInboundAt | type) == "number"' <<<"$row")" = "true"; then
+              inbound_timestamps=$((inbound_timestamps + 1))
+            fi
+          done < <(jq -r '.value[:25][]?._id // empty' <<<"$opportunities")
+
+          jq -nc \
+            --argjson total "$total" \
+            --argjson scanned "$scanned" \
+            --argjson threads "$threads" \
+            --argjson replies "$replies" \
+            --argjson inbound "$inbound_timestamps" \
+            '{ok:true,opportunityCount:$total,scannedOpportunityCount:$scanned,scanComplete:($total <= 25),mailThreadCount:$threads,replyReceivedCount:$replies,inboundTimestampCount:$inbound,inboundProven:($replies > 0 and $inbound > 0)}'
