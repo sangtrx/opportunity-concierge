@@ -248,7 +248,11 @@ export const onMessageReceived = internalMutation({
     }
 
     const followUp = actions.find(item => item.source === "system" && item.title === FOLLOW_UP_ACTION);
-    if (!followUp) {
+    if (followUp) {
+      if (followUp.status === "done" || followUp.status === "skipped") {
+        await ctx.db.patch(followUp._id, { status: "todo", updatedAt: now });
+      }
+    } else {
       await ctx.db.insert("actions", {
         opportunityId,
         title: FOLLOW_UP_ACTION,
