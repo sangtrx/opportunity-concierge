@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -18,11 +18,23 @@ export function OpportunityCard({
   const setDecision = useMutation(api.opportunities.setDecision);
   const setActionStatus = useMutation(api.actions.setStatus);
   const sendReminder = useAction(api.mail.sendReminder);
+  const linkOutboundThread = useMutation(api.mail.linkOutboundThread);
   const [busy, setBusy] = useState(false);
   const [outboundId, setOutboundId] = useState<string | null>(null);
   const sendStatus = useQuery(api.mail.sendStatus, outboundId ? { outboundId } : "skip");
   const threadId = sendStatus?.threadId ?? null;
   const inboundMessages = useQuery(api.mail.threadMessages, threadId ? { threadId } : "skip");
+  const followUpDraft = useQuery(
+    api.mail.followUpDraft,
+    threadId && inboundMessages && inboundMessages.length > 0 ? { opportunityId: id, threadId } : "skip",
+  );
+
+  useEffect(() => {
+    if (!outboundId || !threadId) return;
+    void linkOutboundThread({ opportunityId: id, outboundId, threadId }).catch(() => {
+      // The webhook can link the same thread first; the reactive UI does not need to surface that benign race.
+    });
+  }, [id, linkOutboundThread, outboundId, threadId]);
 
   if (detail === undefined) return <article className="empty">Loading opportunity…</article>;
   if (detail === null) return null;
@@ -142,6 +154,16 @@ export function OpportunityCard({
               ? `${inboundMessages.length} inbound repl${inboundMessages.length === 1 ? "y" : "ies"}`
               : "waiting for reply"}
         </div>
+      )}
+      {followUpDraft && (
+        <section className="evidenceBlock">
+          <div className="sectionLabel">Follow-up draft · review before sending</div>
+          <blockquote>
+            <b>{followUpDraft.subject}</b>
+            <span style={{ whiteSpace: "pre-wrap" }}>{followUpDraft.text}</span>
+            <small>No email is sent automatically.</small>
+          </blockquote>
+        </section>
       )}
     </article>
   );
