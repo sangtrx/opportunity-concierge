@@ -77,6 +77,25 @@ export const sendStatus = query({
   },
 });
 
+export const latestThread = query({
+  args: { opportunityId: v.id("opportunities") },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("mailThreads")
+      .withIndex("by_opportunity", q => q.eq("opportunityId", args.opportunityId))
+      .order("desc")
+      .first();
+    if (!row) return null;
+
+    return {
+      outboundId: row.outboundId,
+      status: row.status,
+      threadId: row.threadId ?? null,
+      lastInboundAt: row.lastInboundAt ?? null,
+    };
+  },
+});
+
 export const replyState = query({
   args: {
     opportunityId: v.id("opportunities"),

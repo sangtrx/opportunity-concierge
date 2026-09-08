@@ -15,37 +15,52 @@ export function OpportunityCard({
   onMessage: (message: string) => void;
 }) {
   const detail = useQuery(api.opportunities.get, { id });
+  const latestThread = useQuery(api.mail.latestThread, { opportunityId: id });
   const setDecision = useMutation(api.opportunities.setDecision);
   const setActionStatus = useMutation(api.actions.setStatus);
   const linkOutboundThread = useMutation(api.mail.linkOutboundThread);
   const sendReminder = useAction(api.mail.sendReminder);
   const [busy, setBusy] = useState(false);
   const [outboundId, setOutboundId] = useState<string | null>(null);
-  const sendStatus = useQuery(api.mail.sendStatus, outboundId ? { outboundId } : "skip");
-  const threadId = sendStatus?.threadId ?? null;
+  const activeOutboundId = outboundId ?? latestThread?.outboundId ?? null;
+  const sendStatus = useQuery(
+    api.mail.sendStatus,
+    activeOutboundId ? { outboundId: activeOutboundId } : "skip",
+  );
+  const threadId = sendStatus?.threadId ?? latestThread?.threadId ?? null;
   const replyState = useQuery(
     api.mail.replyState,
-    outboundId ? { opportunityId: id, outboundId } : "skip",
+    activeOutboundId ? { opportunityId: id, outboundId: activeOutboundId } : "skip",
   );
   const followUpDraft = useQuery(
     api.mail.followUpDraft,
-    outboundId && replyState?.status === "reply_received"
-      ? { opportunityId: id, outboundId }
+    activeOutboundId && replyState?.status === "reply_received"
+      ? { opportunityId: id, outboundId: activeOutboundId }
       : "skip",
   );
 
   useEffect(() => {
-    if (!outboundId || !threadId) return;
-    void linkOutboundThread({ opportunityId: id, outboundId, threadId }).catch(() => {
+    if (!activeOutboundId || !threadId) return;
+    void linkOutboundThread({ opportunityId: id, outboundId: activeOutboundId, threadId }).catch(() => {
       // The webhook callback can establish the same link first; this sync is best-effort.
     });
-  }, [id, linkOutboundThread, outboundId, threadId]);
+  }, [activeOutboundId, id, linkOutboundThread, threadId]);
 
   if (detail === undefined) return <article className="empty">Loading opportunity…</article>;
   if (detail === null) return null;
 
   const { opportunity, evidence, actions, decisions } = detail;
   const latestDecision = decisions[0];
+  const timeline = [
+    ...(opportunity.deadlineAt
+      ? [{ key: "opportunity-deadline", label: "Opportunity deadline", dueAt: opportunity.deadlineAt }]
+      : []),
+    ...actions.flatMap((item) =>
+      item.dueAt !== undefined && item.status !== "done" && item.status !== "skipped"
+        ? [{ key: String(item._id), label: item.title, dueAt: item.dueAt }]
+        : [],
+    ),
+  ].sort((a, b) => a.dueAt - b.dueAt).slice(0, 6);
 
   async function decide(decision: "pursue" | "skip" | "needs_info") {
     setBusy(true);
@@ -141,6 +156,17 @@ export function OpportunityCard({
         </section>
       )}
 
+      {timeline.length > 0 && (
+        <section className="actionsBlock">
+          <div className="sectionLabel">Deadline timeline</div>
+          {timeline.map((item) => (
+            <div className="lastDecision" key={item.key}>
+              {new Date(item.dueAt).toLocaleDateString()} · {item.label}
+            </div>
+          ))}
+        </section>
+      )}
+
       <section className="decisionRow">
         <button type="button" disabled={busy} onClick={() => decide("pursue")}>Pursue</button>
         <button type="button" disabled={busy} onClick={() => decide("needs_info")}>Need info</button>
@@ -148,10 +174,10 @@ export function OpportunityCard({
       </section>
       {latestDecision && <div className="lastDecision">Latest decision · {latestDecision.decision.replace("_", " ")}</div>}
       <button type="button" className="secondary" disabled={busy} onClick={remind}>Email reminder</button>
-      {outboundId && (
-        <div className="lastDecision">AgentMail delivery · {sendStatus?.status ?? "queued"}</div>
+      {activeOutboundId && (
+        <div className="lastDecision">AgentMail delivery · {sendStatus?.status ?? latestThread?.status ?? "queued"}</div>
       )}
-      {outboundId && (
+      {activeOutboundId && (
         <div className="lastDecision">
           AgentMail inbox · {replyState === undefined
             ? "syncing"
