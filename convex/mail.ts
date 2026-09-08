@@ -218,22 +218,38 @@ export const onMessageReceived = internalMutation({
     const labels = getLabels(args.thread);
     const opportunityLabel = labels.find(label => label.startsWith(OPPORTUNITY_LABEL_PREFIX));
     const reminderKeyLabel = labels.find(label => label.startsWith(REMINDER_KEY_LABEL_PREFIX));
-    if (!opportunityLabel || !reminderKeyLabel) return null;
+    const threadId = getStructuralString(args.message, "thread_id") ?? getStructuralString(args.thread, "thread_id");
+    const inboxId = getStructuralString(args.message, "inbox_id") ?? getStructuralString(args.thread, "inbox_id");
 
-    const rawOpportunityId = opportunityLabel.slice(OPPORTUNITY_LABEL_PREFIX.length);
-    const dedupeKey = reminderKeyLabel.slice(REMINDER_KEY_LABEL_PREFIX.length);
-    if (!rawOpportunityId || !dedupeKey) return null;
+    // Once the outbound delivery has persisted its provider thread ID, that
+    // exact thread is the strongest correlation key for an inbound reply.
+    // Keep the label path as a fallback for first-delivery races where the UI
+    // has not linked the outbound thread yet.
+    let row = threadId
+      ? await ctx.db
+          .query("mailThreads")
+          .withIndex("by_thread", q => q.eq("threadId", threadId))
+          .first()
+      : null;
 
-    const row = await ctx.db
-      .query("mailThreads")
-      .withIndex("by_dedupe_key", q => q.eq("dedupeKey", dedupeKey))
-      .first();
-    if (!row || String(row.opportunityId) !== rawOpportunityId) return null;
+    if (!row && opportunityLabel && reminderKeyLabel) {
+      const rawOpportunityId = opportunityLabel.slice(OPPORTUNITY_LABEL_PREFIX.length);
+      const dedupeKey = reminderKeyLabel.slice(REMINDER_KEY_LABEL_PREFIX.length);
+      if (rawOpportunityId && dedupeKey) {
+        const labeledRow = await ctx.db
+          .query("mailThreads")
+          .withIndex("by_dedupe_key", q => q.eq("dedupeKey", dedupeKey))
+          .first();
+        if (labeledRow && String(labeledRow.opportunityId) === rawOpportunityId) {
+          row = labeledRow;
+        }
+      }
+    }
+
+    if (!row) return null;
     const opportunityId = row.opportunityId;
     if (row.lastEventId === args.eventId) return null;
 
-    const threadId = getStructuralString(args.message, "thread_id") ?? getStructuralString(args.thread, "thread_id");
-    const inboxId = getStructuralString(args.message, "inbox_id") ?? getStructuralString(args.thread, "inbox_id");
     if (inboxId && inboxId !== row.inboxId) {
       throw new Error("Inbound AgentMail inbox does not match the reminder inbox");
     }
