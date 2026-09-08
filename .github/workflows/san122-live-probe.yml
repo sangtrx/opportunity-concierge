@@ -1,0 +1,26 @@
+name: SAN-122 Live Probe
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/san122-live-probe.yml
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read production inbound health
+        shell: bash
+        run: |
+          set -euo pipefail
+          body=""
+          for attempt in {1..12}; do
+            if body="$(curl -fsS --max-time 15 https://opportunity-concierge.vercel.app/api/health/inbound)"; then
+              break
+            fi
+            sleep 5
+          done
+          test -n "$body"
+          printf '%s\n' "$body" | jq .
+          printf '%s\n' "$body" | jq -e '.ok == true'
