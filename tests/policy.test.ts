@@ -9,7 +9,12 @@ import {
   resolveEligibility,
   verifiedEvidence,
 } from "../lib/analysisPolicy";
-import { stableDigest } from "../lib/mailPolicy";
+import {
+  existingOutboundId,
+  isDuplicateWebhookEvent,
+  stableDigest,
+  statusAfterThreadLink,
+} from "../lib/mailPolicy";
 
 test("candidate facts are only normalized, never invented", () => {
   const input = [" Vietnam ", "", "8+ years", "   ", ...Array.from({ length: 45 }, (_, i) => `fact-${i}`)];
@@ -72,4 +77,24 @@ test("AgentMail reminder dedupe digest is deterministic and payload-sensitive", 
   assert.equal(first, stableDigest(payload));
   assert.match(first, /^[0-9a-f]{16}$/);
   assert.notEqual(first, stableDigest(payload + "!"));
+});
+
+test("same reminder payload reuses the existing outbound without another provider write", () => {
+  const existing = { payloadFingerprint: "same-payload", outboundId: "outbound-123" };
+  assert.equal(existingOutboundId(existing, "same-payload"), "outbound-123");
+  assert.equal(existingOutboundId(null, "new-payload"), null);
+  assert.throws(
+    () => existingOutboundId(existing, "different-payload"),
+    /Reminder idempotency collision/,
+  );
+});
+
+test("webhook and thread-link transitions are deterministic and idempotent", () => {
+  assert.equal(statusAfterThreadLink("queued"), "sent");
+  assert.equal(statusAfterThreadLink("sent"), "sent");
+  assert.equal(statusAfterThreadLink("reply_received"), "reply_received");
+
+  assert.equal(isDuplicateWebhookEvent(undefined, "evt-1"), false);
+  assert.equal(isDuplicateWebhookEvent("evt-1", "evt-1"), true);
+  assert.equal(isDuplicateWebhookEvent("evt-1", "evt-2"), false);
 });
