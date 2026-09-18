@@ -8,7 +8,8 @@
     "build": "next build",
     "lint": "eslint .",
     "convex": "convex dev",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "rm -rf .test-build && tsc --target ES2022 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck --strict --outDir .test-build --noEmit false tests/policy.test.ts lib/analysisPolicy.ts lib/mailPolicy.ts && node --test .test-build/tests/policy.test.js && rm -rf .test-build"
   },
   "dependencies": {
     "@agentmail/convex": "^0.1.0",

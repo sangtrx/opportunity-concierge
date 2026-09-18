@@ -6,6 +6,14 @@ import OpenAI from "openai";
 import { action } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { v } from "convex/values";
+import {
+  clampPriorityScore,
+  normalizeActions,
+  normalizeCandidateFacts,
+  parseIsoMillis,
+  resolveEligibility,
+  verifiedEvidence,
+} from "../lib/analysisPolicy";
 
 const MAX_SOURCE_CHARS = 90_000;
 const firecrawl = new FirecrawlClient(components.firecrawl);
@@ -134,18 +142,6 @@ async function assessWithOpenAI(sourceUrl: string, markdown: string, candidateFa
   return JSON.parse(response.output_text) as Assessment;
 }
 
-function parseIsoMillis(value: string | null): number | undefined {
-  if (!value) return undefined;
-  const ms = Date.parse(value);
-  return Number.isFinite(ms) ? ms : undefined;
-}
-
-function verifiedEvidence(markdown: string, evidence: Assessment["evidence"]): Assessment["evidence"] {
-  return evidence
-    .map((item) => ({ ...item, quote: item.quote.trim() }))
-    .filter((item) => item.quote.length > 0 && item.quote.length <= 220 && markdown.includes(item.quote));
-}
-
 export const analyze = action({
   args: {
     opportunityId: v.id("opportunities"),
@@ -157,16 +153,17 @@ export const analyze = action({
     });
     if (!opportunity) throw new Error("Opportunity not found");
 
-    const facts = args.candidateFacts.map((fact) => fact.trim()).filter(Boolean).slice(0, 40);
+    const facts = normalizeCandidateFacts(args.candidateFacts);
     const scraped = await scrapeOfficialPage(ctx, opportunity.sourceUrl);
     const contentHash = createHash("sha256").update(scraped.markdown).digest("hex");
     const assessment = await assessWithOpenAI(opportunity.sourceUrl, scraped.markdown, facts);
     const evidence = verifiedEvidence(scraped.markdown, assessment.evidence);
 
-    const eligibility = evidence.length === 0 ? "needs_info" : assessment.eligibility;
-    const eligibilityReason = evidence.length === 0
-      ? "The model produced no evidence quote that could be verified verbatim against the official source. Review the source manually."
-      : assessment.eligibilityReason;
+    const { eligibility, eligibilityReason } = resolveEligibility(
+      assessment.eligibility,
+      assessment.eligibilityReason,
+      evidence,
+    );
 
     await ctx.runMutation(internal.opportunities.applyAnalysis, {
       id: args.opportunityId,
@@ -176,15 +173,12 @@ export const analyze = action({
       eligibility,
       eligibilityReason,
       missingFacts: assessment.missingFacts.slice(0, 20),
-      priorityScore: Math.max(0, Math.min(100, Math.round(assessment.priorityScore))),
+      priorityScore: clampPriorityScore(assessment.priorityScore),
       sourceUrl: opportunity.sourceUrl,
       contentHash,
       markdown: scraped.markdown,
       evidence,
-      actions: assessment.actions.slice(0, 10).map((item) => ({
-        title: item.title.trim(),
-        dueAt: parseIsoMillis(item.dueAtIso)
-      })).filter((item) => item.title.length > 0)
+      actions: normalizeActions(assessment.actions)
     });
 
     return { eligibility, evidenceCount: evidence.length, contentHash };

@@ -2,6 +2,7 @@ import { AgentMail, type OutboundId } from "@agentmail/convex";
 import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import { action, internalMutation, mutation, query } from "./_generated/server";
+import { isDuplicateWebhookEvent, stableDigest, statusAfterThreadLink } from "../lib/mailPolicy";
 
 const agentmail = new AgentMail(components.agentmail);
 const WAITING_ACTION = "Await reply to AgentMail reminder";
@@ -141,7 +142,7 @@ export const linkOutboundThread = mutation({
 
     await ctx.db.patch(row._id, {
       threadId: args.threadId,
-      status: row.status === "reply_received" ? "reply_received" : "sent",
+      status: statusAfterThreadLink(row.status),
       updatedAt: Date.now(),
     });
   },
@@ -221,10 +222,6 @@ export const onMessageReceived = internalMutation({
     const threadId = getStructuralString(args.message, "thread_id") ?? getStructuralString(args.thread, "thread_id");
     const inboxId = getStructuralString(args.message, "inbox_id") ?? getStructuralString(args.thread, "inbox_id");
 
-    // Once the outbound delivery has persisted its provider thread ID, that
-    // exact thread is the strongest correlation key for an inbound reply.
-    // Keep the label path as a fallback for first-delivery races where the UI
-    // has not linked the outbound thread yet.
     let row = threadId
       ? await ctx.db
           .query("mailThreads")
@@ -248,7 +245,7 @@ export const onMessageReceived = internalMutation({
 
     if (!row) return null;
     const opportunityId = row.opportunityId;
-    if (row.lastEventId === args.eventId) return null;
+    if (isDuplicateWebhookEvent(row.lastEventId, args.eventId)) return null;
 
     if (inboxId && inboxId !== row.inboxId) {
       throw new Error("Inbound AgentMail inbox does not match the reminder inbox");
@@ -312,17 +309,6 @@ function getStructuralString(value: unknown, key: string): string | null {
   if (!value || typeof value !== "object") return null;
   const candidate = (value as Record<string, unknown>)[key];
   return typeof candidate === "string" && candidate.trim() ? candidate.trim() : null;
-}
-
-function stableDigest(value: string): string {
-  let h1 = 0x811c9dc5;
-  let h2 = 0x9e3779b9;
-  for (let index = 0; index < value.length; index += 1) {
-    const code = value.charCodeAt(index);
-    h1 = Math.imul(h1 ^ code, 0x01000193) >>> 0;
-    h2 = Math.imul(h2 ^ (code + index), 0x27d4eb2d) >>> 0;
-  }
-  return `${h1.toString(16).padStart(8, "0")}${h2.toString(16).padStart(8, "0")}`;
 }
 
 function escapeHtml(value: string): string {
