@@ -2,6 +2,7 @@ import { AgentMail } from "@agentmail/convex";
 import { v } from "convex/values";
 import { components } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
+import { existingOutboundId } from "../lib/mailPolicy";
 
 const agentmail = new AgentMail(components.agentmail);
 const WAITING_ACTION = "Await reply to AgentMail reminder";
@@ -22,12 +23,8 @@ export const enqueueReminder = internalMutation({
       .query("mailThreads")
       .withIndex("by_dedupe_key", (q) => q.eq("dedupeKey", args.dedupeKey))
       .first();
-    if (existing) {
-      if (existing.payloadFingerprint !== args.payloadFingerprint) {
-        throw new Error("Reminder idempotency collision");
-      }
-      return existing.outboundId;
-    }
+    const existingId = existingOutboundId(existing, args.payloadFingerprint);
+    if (existingId) return existingId;
 
     const outboundId = await agentmail.sendMessage(ctx, args.inboxId, {
       to: args.to,
