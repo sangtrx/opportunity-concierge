@@ -25,12 +25,13 @@ The first successful Convex project setup generates `convex/_generated/`, includ
 Copy `.env.example` to `.env.local`, configure the generated `NEXT_PUBLIC_CONVEX_URL`, and set Firecrawl/OpenAI/AgentMail credentials in the Convex deployment environment. For the component-backed webhook paths, set `FIRECRAWL_WEBHOOK_SECRET` and `AGENTMAIL_WEBHOOK_SECRET` as well. Then run:
 
 ```bash
+npm test
 npm run typecheck
 npm run build
 npm run dev
 ```
 
-Do not commit provider keys or Convex deployment secrets.
+Do not commit provider keys or Convex deployment secrets. `npm test` is offline and covers the fail-closed evidence/fact policy plus deterministic reminder dedupe; it does not call Convex, Firecrawl, OpenAI, or AgentMail.
 
 ## Current qualification state
 
