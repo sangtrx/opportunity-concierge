@@ -2,6 +2,7 @@ import { AgentMail, type OutboundId } from "@agentmail/convex";
 import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import { action, internalMutation, mutation, query } from "./_generated/server";
+import { stableDigest } from "../lib/mailPolicy";
 
 const agentmail = new AgentMail(components.agentmail);
 const WAITING_ACTION = "Await reply to AgentMail reminder";
@@ -314,16 +315,6 @@ function getStructuralString(value: unknown, key: string): string | null {
   return typeof candidate === "string" && candidate.trim() ? candidate.trim() : null;
 }
 
-function stableDigest(value: string): string {
-  let h1 = 0x811c9dc5;
-  let h2 = 0x9e3779b9;
-  for (let index = 0; index < value.length; index += 1) {
-    const code = value.charCodeAt(index);
-    h1 = Math.imul(h1 ^ code, 0x01000193) >>> 0;
-    h2 = Math.imul(h2 ^ (code + index), 0x27d4eb2d) >>> 0;
-  }
-  return `${h1.toString(16).padStart(8, "0")}${h2.toString(16).padStart(8, "0")}`;
-}
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({
