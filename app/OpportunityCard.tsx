@@ -140,7 +140,7 @@ export function OpportunityCard({
       {actions.length > 0 && (
         <section className="actionsBlock">
           <div className="sectionLabel">Next actions</div>
-          {actions.map((item) => (
+          {actions.slice(0, 12).map((item) => (
             <button
               type="button"
               className={`actionItem ${item.status === "done" ? "done" : ""}`}
