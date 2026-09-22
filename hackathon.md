@@ -35,9 +35,9 @@ App: **Opportunity Concierge**
 
 ## Final-submission evidence — 2026-09-22
 - Fresh public Analyze acceptance passed at https://valiant-crab-246.convex.site using the official All Gas URL: the UI completed with `needs_info` and **5 verified evidence quotes** after a real Firecrawl → OpenAI → Convex run; browser errors and console errors were empty.
-- Under-3-minute demo + required sponsor-tagged social proof: https://x.com/Currenlabs/status/2102397127800549693
-  - The attached demo is **28.83 seconds** and was recorded from the accepted public app.
-  - The post tags `@convex`, `@OpenAI`, `@firecrawl`, and `@agentmail`, and links the live app and public repository.
+- Required sponsor-tagged social proof: https://x.com/sangtrx/status/2102431680502079997
+  - The post tags `@convex`, `@OpenAI`, `@Firecrawl`, and `@AgentMail`, and links the live app.
+- Submitted under-3-minute Video Demo: https://youtu.be/CZmA1vFSyF4
+  - The YouTube demo is **1:53.25** and was recorded from the accepted public app.
 - Final VibeApps judging submission receipt: https://vibeapps.dev/s/opportunity-concierge
-  - The public submission page lists Opportunity Concierge by Trương Quang Sang, the accepted `convex.site` app URL, GitHub repository, LinkedIn profile, X social post, and required tags.
-  - The submitted Video Demo is the public 44.0-second MP4 at https://github.com/sangtrx/opportunity-concierge/releases/download/all-gas-submission-2026-09-22/all-gas-demo-2026-09-22.mp4.
+  - The public submission page lists Opportunity Concierge by Trương Quang Sang, the accepted `convex.site` app URL, GitHub repository, LinkedIn profile, X social post, required tags, and the YouTube Video Demo above.
