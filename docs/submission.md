@@ -13,23 +13,32 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - [x] AgentMail does explicit reminder delivery through the AgentMail Convex Component in source
 - [x] Reactive AgentMail outbound status is exposed in source
 - [x] AgentMail webhook + reactive inbound reply state are implemented in source
-- [ ] Luma registration completed
+- [x] Luma registration completed
 - [ ] 20k participant Firecrawl credits claimed
-- [ ] Convex project provisioned with `npx convex dev`
-- [ ] Real component-aware `convex/_generated/*` committed
-- [ ] Provider + webhook secrets set in the Convex deployment environment
-- [ ] Clean-clone `npm run typecheck` passes for the exact accepted SHA
-- [ ] Clean-clone `npm run build` passes for the exact accepted SHA
+- [x] Convex project provisioned with `npx convex dev`
+- [x] Real component-aware `convex/_generated/*` committed
+- [x] Provider + webhook secrets set in the accepted Convex deployment environment
+- [x] Clean-clone `npm run typecheck` passes for the exact accepted SHA
+- [x] Clean-clone `npm run build` passes for the exact accepted SHA
 - [ ] Live Firecrawl Component → OpenAI → Convex persistence acceptance passes
-- [ ] Live realtime opportunity decision/action mutation is demonstrated
-- [ ] Live AgentMail Component send + reactive delivery status passes
-- [ ] Live inbound AgentMail reply updates reactive thread state
-- [ ] Public app deployed to `convex.site` or `chatgpt.site`
-- [ ] Live URL added to `hackathon.md`
+- [x] Live realtime opportunity decision/action state is demonstrated and survives reload
+- [x] Live AgentMail Component send + reactive delivery status passes
+- [x] Live inbound AgentMail reply updates reactive thread state
+- [x] Public app deployed to `convex.site`: https://valiant-crab-246.convex.site
+- [x] Live URL added to `hackathon.md`
 - [ ] <3 minute demo recorded from the accepted deployed SHA
 - [ ] Demo URL added to `hackathon.md`
 - [ ] X or LinkedIn post published tagging `@convex`, `@OpenAI`, `@firecrawl`, `@agentmail`
 - [ ] Submit repo + live app + video on vibeapps.dev
+
+## Verified final-lane receipts — 2026-09-22
+
+- Luma registration is confirmed by the organizer email recorded on parent issue SAN-43.
+- SAN-122 runtime acceptance is complete with one bounded AgentMail reminder/reply flow and `inbound_proven=true`.
+- SAN-115 public judge-UX acceptance passed at https://valiant-crab-246.convex.site, including persisted reply/action/follow-up state after reload.
+- Exact static-hosting candidate `b3e8d51a2fe173d9abc95e83a1dad6dffaf59600` passed tests, typecheck, production build and static export before publication.
+- The Firecrawl participant-credit checkbox remains intentionally unchecked because no durable claim receipt is recorded here.
+- The live Firecrawl → OpenAI → Convex acceptance checkbox remains intentionally unchecked until a fresh end-to-end analyze receipt is captured; existing source integration and persisted evidence are not overstated as a fresh live run.
 
 ## Judging polish after runtime acceptance
 
@@ -43,7 +52,7 @@ Paste an official hackathon/grant/scholarship/job URL → Firecrawl captures the
 
 The key design constraint: missing user facts never silently become `eligible=true`, and every displayed evidence quote is verified against the captured source before it is persisted.
 
-Live: `[LIVE_URL]`
+Live: https://valiant-crab-246.convex.site
 Repo: https://github.com/sangtrx/opportunity-concierge
 Demo: `[DEMO_URL]`
 
