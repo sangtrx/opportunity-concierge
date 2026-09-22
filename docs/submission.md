@@ -20,15 +20,15 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - [x] Provider + webhook secrets set in the accepted Convex deployment environment
 - [x] Clean-clone `npm run typecheck` passes for the exact accepted SHA
 - [x] Clean-clone `npm run build` passes for the exact accepted SHA
-- [ ] Live Firecrawl Component → OpenAI → Convex persistence acceptance passes
+- [x] Live Firecrawl Component → OpenAI → Convex persistence acceptance passes
 - [x] Live realtime opportunity decision/action state is demonstrated and survives reload
 - [x] Live AgentMail Component send + reactive delivery status passes
 - [x] Live inbound AgentMail reply updates reactive thread state
 - [x] Public app deployed to `convex.site`: https://valiant-crab-246.convex.site
 - [x] Live URL added to `hackathon.md`
-- [ ] <3 minute demo recorded from the accepted deployed SHA
-- [ ] Demo URL added to `hackathon.md`
-- [ ] X or LinkedIn post published tagging `@convex`, `@OpenAI`, `@firecrawl`, `@agentmail`
+- [x] <3 minute demo recorded from the accepted public app (28.83s)
+- [x] Demo URL added to `hackathon.md`
+- [x] X post published tagging `@convex`, `@OpenAI`, `@firecrawl`, `@agentmail`
 - [ ] Submit repo + live app + video on vibeapps.dev
 
 ## Verified final-lane receipts — 2026-09-22
@@ -38,7 +38,8 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - SAN-115 public judge-UX acceptance passed at https://valiant-crab-246.convex.site, including persisted reply/action/follow-up state after reload.
 - Exact static-hosting candidate `b3e8d51a2fe173d9abc95e83a1dad6dffaf59600` passed tests, typecheck, production build and static export before publication.
 - The Firecrawl participant-credit checkbox remains intentionally unchecked because no durable claim receipt is recorded here.
-- The live Firecrawl → OpenAI → Convex acceptance checkbox remains intentionally unchecked until a fresh end-to-end analyze receipt is captured; existing source integration and persisted evidence are not overstated as a fresh live run.
+- Fresh public Analyze acceptance passed on 2026-09-22 using the official All Gas URL: the public UI completed with `needs_info` and 5 verified evidence quotes after a real Firecrawl → OpenAI → Convex run; browser errors and console errors were empty.
+- Demo/social receipt: https://x.com/Currenlabs/status/2102397127800549693 — attached public-app recording is 28.83 seconds and the post tags all four required sponsor accounts.
 
 ## Judging polish after runtime acceptance
 
@@ -54,7 +55,7 @@ The key design constraint: missing user facts never silently become `eligible=tr
 
 Live: https://valiant-crab-246.convex.site
 Repo: https://github.com/sangtrx/opportunity-concierge
-Demo: `[DEMO_URL]`
+Demo: https://x.com/Currenlabs/status/2102397127800549693
 
 @convex @OpenAI @firecrawl @agentmail
 
@@ -69,4 +70,4 @@ Demo: `[DEMO_URL]`
 
 ## Evidence discipline
 
-Source-complete is not runtime-accepted. Until SAN-122 clears, leave every deployment/demo/provider checkbox above unchecked and do not publish claims that the component migration has been live-validated.
+Source-complete is not runtime-accepted. The runtime, fresh Analyze, public judge UX, and demo/social claims above are checked only because each now has a durable acceptance receipt. Keep the final VibeApps checkbox unchecked until the judging form returns a real submission receipt.
