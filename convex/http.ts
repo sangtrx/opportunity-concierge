@@ -1,4 +1,5 @@
 import { AgentMail } from "@agentmail/convex";
+import { registerStaticRoutes } from "@convex-dev/static-hosting";
 import { httpRouter } from "convex/server";
 import { components, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
@@ -18,5 +19,7 @@ http.route({
     ),
   ),
 });
+
+registerStaticRoutes(http, components.staticHosting);
 
 export default http;
