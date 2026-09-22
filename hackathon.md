@@ -28,12 +28,12 @@ App: **Opportunity Concierge**
 
 ## Live acceptance — 2026-09-22
 - Public app: https://valiant-crab-246.convex.site
+- Demo video (44s, 1280x720): https://github.com/sangtrx/opportunity-concierge/releases/download/all-gas-submission-2026-09-22/all-gas-demo-2026-09-22.mp4
 - Runtime/provider gate SAN-122 is complete: the fixed-inbox AgentMail webhook is enabled for `message.received`, one bounded reminder/reply acceptance flow reached Convex, and aggregate state reports `inbound_proven=true`.
 - Judge-facing SAN-115 acceptance passed on the public `convex.site`: the persisted reminder is sent, the reply is received, the waiting action is complete, the review-only follow-up action/draft is visible, and the same state survives a browser reload.
 - Exact static-hosting candidate `b3e8d51a2fe173d9abc95e83a1dad6dffaf59600` passed `npm test`, `npm run typecheck`, the production Next.js build, and static export before publication.
 - Raw inbound email bodies are not exposed in the public UI.
 
 ## Remaining final-submission evidence
-- Record and publish the under-3-minute click-through demo.
 - Publish the required sponsor-tagged X or LinkedIn post.
 - Submit the public repo, live URL, and video through the current VibeApps judging form before the organizer cutoff.

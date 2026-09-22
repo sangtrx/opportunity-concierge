@@ -35,4 +35,4 @@ Do not commit provider keys or Convex deployment secrets. `npm test` is offline 
 
 ## Current qualification state
 
-Core Convex schema/UI and the three provider integrations are implemented, including the official Firecrawl and AgentMail Convex Components. The public judge surface is live at https://valiant-crab-246.convex.site. AgentMail inbound runtime acceptance and persisted public reply/follow-up UX acceptance are complete; the remaining hackathon work is the under-3-minute demo, sponsor-tagged social proof, and final judging submission. See `hackathon.md` for the evidence boundary.
+Core Convex schema/UI and the three provider integrations are implemented, including the official Firecrawl and AgentMail Convex Components. The public judge surface is live at https://valiant-crab-246.convex.site. AgentMail inbound runtime acceptance and persisted public reply/follow-up UX acceptance are complete; the under-3-minute public demo is published; the remaining hackathon work is sponsor-tagged social proof and final judging submission. See `hackathon.md` for the evidence boundary.

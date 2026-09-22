@@ -26,8 +26,8 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - [x] Live inbound AgentMail reply updates reactive thread state
 - [x] Public app deployed to `convex.site`: https://valiant-crab-246.convex.site
 - [x] Live URL added to `hackathon.md`
-- [ ] <3 minute demo recorded from the accepted deployed SHA
-- [ ] Demo URL added to `hackathon.md`
+- [x] <3 minute demo recorded from the accepted deployed/public state (44 seconds)
+- [x] Demo URL added to `hackathon.md`
 - [ ] X or LinkedIn post published tagging `@convex`, `@OpenAI`, `@firecrawl`, `@agentmail`
 - [ ] Submit repo + live app + video on vibeapps.dev
 
@@ -39,6 +39,7 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - Exact static-hosting candidate `b3e8d51a2fe173d9abc95e83a1dad6dffaf59600` passed tests, typecheck, production build and static export before publication.
 - The Firecrawl participant-credit checkbox remains intentionally unchecked because no durable claim receipt is recorded here.
 - The live Firecrawl → OpenAI → Convex acceptance checkbox remains intentionally unchecked until a fresh end-to-end analyze receipt is captured; existing source integration and persisted evidence are not overstated as a fresh live run.
+- Public demo asset: https://github.com/sangtrx/opportunity-concierge/releases/download/all-gas-submission-2026-09-22/all-gas-demo-2026-09-22.mp4 (44.0s, 1280×720, SHA-256 `e389ae4beb5391711d76d55183791477910e157581d976c50186ade84518a69f`).
 
 ## Judging polish after runtime acceptance
 
@@ -54,7 +55,7 @@ The key design constraint: missing user facts never silently become `eligible=tr
 
 Live: https://valiant-crab-246.convex.site
 Repo: https://github.com/sangtrx/opportunity-concierge
-Demo: `[DEMO_URL]`
+Demo: https://github.com/sangtrx/opportunity-concierge/releases/download/all-gas-submission-2026-09-22/all-gas-demo-2026-09-22.mp4
 
 @convex @OpenAI @firecrawl @agentmail
 
