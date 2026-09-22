@@ -29,7 +29,7 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - [x] <3 minute demo recorded from the accepted public app (28.83s)
 - [x] Demo URL added to `hackathon.md`
 - [x] X post published tagging `@convex`, `@OpenAI`, `@firecrawl`, `@agentmail`
-- [ ] Submit repo + live app + video on vibeapps.dev
+- [x] Submit repo + live app + video on vibeapps.dev
 
 ## Verified final-lane receipts — 2026-09-22
 
@@ -40,6 +40,7 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - The Firecrawl participant-credit checkbox remains intentionally unchecked because no durable claim receipt is recorded here.
 - Fresh public Analyze acceptance passed on 2026-09-22 using the official All Gas URL: the public UI completed with `needs_info` and 5 verified evidence quotes after a real Firecrawl → OpenAI → Convex run; browser errors and console errors were empty.
 - Demo/social receipt: https://x.com/Currenlabs/status/2102397127800549693 — attached public-app recording is 28.83 seconds and the post tags all four required sponsor accounts.
+- Final VibeApps submission receipt: https://vibeapps.dev/s/opportunity-concierge. The public receipt page lists the live `convex.site` app, public GitHub repo, LinkedIn profile, X share, required tags, and the public 44.0-second Video Demo asset.
 
 ## Judging polish after runtime acceptance
 
@@ -70,4 +71,4 @@ Demo: https://x.com/Currenlabs/status/2102397127800549693
 
 ## Evidence discipline
 
-Source-complete is not runtime-accepted. The runtime, fresh Analyze, public judge UX, and demo/social claims above are checked only because each now has a durable acceptance receipt. Keep the final VibeApps checkbox unchecked until the judging form returns a real submission receipt.
+Source-complete is not runtime-accepted. The runtime, fresh Analyze, public judge UX, and demo/social claims above are checked only because each now has a durable acceptance receipt. The final VibeApps checkbox is checked only after the public submission page at https://vibeapps.dev/s/opportunity-concierge was verified.
