@@ -26,7 +26,7 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - [x] Live inbound AgentMail reply updates reactive thread state
 - [x] Public app deployed to `convex.site`: https://valiant-crab-246.convex.site
 - [x] Live URL added to `hackathon.md`
-- [x] <3 minute demo recorded from the accepted public app (28.83s)
+- [x] <3 minute demo recorded from the accepted public app (1:53.25)
 - [x] Demo URL added to `hackathon.md`
 - [x] X post published tagging `@convex`, `@OpenAI`, `@firecrawl`, `@agentmail`
 - [x] Submit repo + live app + video on vibeapps.dev
@@ -39,8 +39,9 @@ Official deadline: **2026-09-22 12:00 PM PT**.
 - Exact static-hosting candidate `b3e8d51a2fe173d9abc95e83a1dad6dffaf59600` passed tests, typecheck, production build and static export before publication.
 - The Firecrawl participant-credit checkbox remains intentionally unchecked because no durable claim receipt is recorded here.
 - Fresh public Analyze acceptance passed on 2026-09-22 using the official All Gas URL: the public UI completed with `needs_info` and 5 verified evidence quotes after a real Firecrawl → OpenAI → Convex run; browser errors and console errors were empty.
-- Demo/social receipt: https://x.com/Currenlabs/status/2102397127800549693 — attached public-app recording is 28.83 seconds and the post tags all four required sponsor accounts.
-- Final VibeApps submission receipt: https://vibeapps.dev/s/opportunity-concierge. The public receipt page lists the live `convex.site` app, public GitHub repo, LinkedIn profile, X share, required tags, and the public 44.0-second Video Demo asset.
+- Social receipt: https://x.com/sangtrx/status/2102431680502079997 — the post tags all four required sponsor accounts.
+- Video Demo: https://youtu.be/CZmA1vFSyF4 — 1:53.25, under the 3-minute limit, recorded from the accepted public app.
+- Final VibeApps submission receipt: https://vibeapps.dev/s/opportunity-concierge. The public receipt page lists the live `convex.site` app, public GitHub repo, LinkedIn profile, X share, required tags, and the YouTube Video Demo above.
 
 ## Judging polish after runtime acceptance
 
@@ -56,7 +57,7 @@ The key design constraint: missing user facts never silently become `eligible=tr
 
 Live: https://valiant-crab-246.convex.site
 Repo: https://github.com/sangtrx/opportunity-concierge
-Demo: https://x.com/Currenlabs/status/2102397127800549693
+Demo: https://youtu.be/CZmA1vFSyF4
 
 @convex @OpenAI @firecrawl @agentmail
 
