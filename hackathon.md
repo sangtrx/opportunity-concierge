@@ -33,7 +33,9 @@ App: **Opportunity Concierge**
 - Exact static-hosting candidate `b3e8d51a2fe173d9abc95e83a1dad6dffaf59600` passed `npm test`, `npm run typecheck`, the production Next.js build, and static export before publication.
 - Raw inbound email bodies are not exposed in the public UI.
 
-## Remaining final-submission evidence
-- Record and publish the under-3-minute click-through demo.
-- Publish the required sponsor-tagged X or LinkedIn post.
-- Submit the public repo, live URL, and video through the current VibeApps judging form before the organizer cutoff.
+## Final-submission evidence — 2026-09-22
+- Fresh public Analyze acceptance passed at https://valiant-crab-246.convex.site using the official All Gas URL: the UI completed with `needs_info` and **5 verified evidence quotes** after a real Firecrawl → OpenAI → Convex run; browser errors and console errors were empty.
+- Under-3-minute demo + required sponsor-tagged social proof: https://x.com/Currenlabs/status/2102397127800549693
+  - The attached demo is **28.83 seconds** and was recorded from the accepted public app.
+  - The post tags `@convex`, `@OpenAI`, `@firecrawl`, and `@agentmail`, and links the live app and public repository.
+- Final VibeApps judging submission receipt: pending final form submission; do not infer completion until a durable receipt is recorded here.
