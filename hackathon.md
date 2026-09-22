@@ -38,4 +38,6 @@ App: **Opportunity Concierge**
 - Under-3-minute demo + required sponsor-tagged social proof: https://x.com/Currenlabs/status/2102397127800549693
   - The attached demo is **28.83 seconds** and was recorded from the accepted public app.
   - The post tags `@convex`, `@OpenAI`, `@firecrawl`, and `@agentmail`, and links the live app and public repository.
-- Final VibeApps judging submission receipt: pending final form submission; do not infer completion until a durable receipt is recorded here.
+- Final VibeApps judging submission receipt: https://vibeapps.dev/s/opportunity-concierge
+  - The public submission page lists Opportunity Concierge by Trương Quang Sang, the accepted `convex.site` app URL, GitHub repository, LinkedIn profile, X social post, and required tags.
+  - The submitted Video Demo is the public 44.0-second MP4 at https://github.com/sangtrx/opportunity-concierge/releases/download/all-gas-submission-2026-09-22/all-gas-demo-2026-09-22.mp4.
