@@ -9,10 +9,13 @@
     "lint": "eslint .",
     "convex": "convex dev",
     "typecheck": "tsc --noEmit",
-    "test": "rm -rf .test-build && tsc --target ES2022 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck --strict --outDir .test-build --noEmit false tests/policy.test.ts lib/analysisPolicy.ts lib/mailPolicy.ts && node --test .test-build/tests/policy.test.js && rm -rf .test-build"
+    "test": "rm -rf .test-build && tsc --target ES2022 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck --strict --outDir .test-build --noEmit false tests/policy.test.ts lib/analysisPolicy.ts lib/mailPolicy.ts && node --test .test-build/tests/policy.test.js && rm -rf .test-build",
+    "deploy": "npx @convex-dev/static-hosting deploy --dist out --build-command \"npm run build:static\"",
+    "build:static": "node scripts/build-static.mjs"
   },
   "dependencies": {
     "@agentmail/convex": "^0.1.0",
+    "@convex-dev/static-hosting": "^0.2.1",
     "@firecrawl/firecrawl-convex": "^0.1.1",
     "convex": "^1.45.0",
     "convex-helpers": "^0.1.122",

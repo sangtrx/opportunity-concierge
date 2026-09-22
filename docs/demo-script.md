@@ -86,6 +86,6 @@ Do not turn this into a code walkthrough.
 - [ ] Public convex.site or chatgpt.site URL visible
 - [ ] Video under 3 minutes
 
-## Fail-closed recording rule
+## Current recording authority — 2026-09-22
 
-Do not record or claim this flow until SAN-122 has provisioned the Convex project, generated and committed the real `convex/_generated/*` bindings, configured provider/webhook secrets, and the exact deployed SHA has passed live provider acceptance.
+SAN-122 runtime acceptance and SAN-115 public judge-UX acceptance are complete. Record from https://valiant-crab-246.convex.site and keep every narrated claim bounded to what the public surface and recorded runtime receipts actually prove. Do not expose provider secrets or raw inbound email content.

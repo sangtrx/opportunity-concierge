@@ -23,7 +23,17 @@ App: **Opportunity Concierge**
 
 ## Qualification guardrails
 - New app work begins after 2026-08-25.
-- Public deployment, final README/demo/social evidence remain pending.
 - Provider credentials remain environment-only and are never committed.
-- Clean-clone/typecheck acceptance remains blocked on account-side Convex provisioning and committed generated bindings; source changes must not be represented as live-validated before that gate is cleared.
-- The 2026-09-07 component migration is source-complete but runtime-unverified until SAN-122 provisions Convex, generates/commits `convex/_generated/*`, installs dependencies, sets provider/webhook secrets, and passes the live provider acceptance flow.
+- Public evidence must describe only behavior that was actually exercised; no fabricated provider, deployment, social, video, or submission receipts.
+
+## Live acceptance — 2026-09-22
+- Public app: https://valiant-crab-246.convex.site
+- Runtime/provider gate SAN-122 is complete: the fixed-inbox AgentMail webhook is enabled for `message.received`, one bounded reminder/reply acceptance flow reached Convex, and aggregate state reports `inbound_proven=true`.
+- Judge-facing SAN-115 acceptance passed on the public `convex.site`: the persisted reminder is sent, the reply is received, the waiting action is complete, the review-only follow-up action/draft is visible, and the same state survives a browser reload.
+- Exact static-hosting candidate `b3e8d51a2fe173d9abc95e83a1dad6dffaf59600` passed `npm test`, `npm run typecheck`, the production Next.js build, and static export before publication.
+- Raw inbound email bodies are not exposed in the public UI.
+
+## Remaining final-submission evidence
+- Record and publish the under-3-minute click-through demo.
+- Publish the required sponsor-tagged X or LinkedIn post.
+- Submit the public repo, live URL, and video through the current VibeApps judging form before the organizer cutoff.
